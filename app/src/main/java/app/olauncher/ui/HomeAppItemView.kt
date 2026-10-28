@@ -8,6 +8,7 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.view.doOnLayout
 import app.olauncher.R
 import kotlin.math.roundToInt
 
@@ -43,12 +44,7 @@ class HomeAppItemView @JvmOverloads constructor(
             iconView.setImageDrawable(null)
         }
 
-        val baseSize = labelView.textSize.roundToInt().coerceAtLeast(16)
-        setIconSize(baseSize)
-
-        post {
-            animateToHalfSize()
-        }
+        animateIconToFinalSize()
     }
 
     fun showPlaceholder(label: String) {
@@ -61,26 +57,30 @@ class HomeAppItemView @JvmOverloads constructor(
         this.visibility = if (visible) View.VISIBLE else View.GONE
     }
 
-    private fun animateToHalfSize() {
-        val currentSize = iconView.width
-        if (currentSize <= 0) return
+    private fun animateIconToFinalSize() {
+        val startSize = 32.dpToPx()
+        val targetSize = 16.dpToPx()
 
-        val targetSize = (currentSize * 0.5f).roundToInt().coerceAtLeast(12)
+        iconView.animate().cancel()
+        iconView.scaleX = 1f
+        iconView.scaleY = 1f
+        setIconSize(startSize)
 
-        iconView.pivotX = currentSize.toFloat()
-        iconView.pivotY = currentSize.toFloat()
-
-        iconView.animate()
-            .scaleX(0.5f)
-            .scaleY(0.5f)
-            .setDuration(420)
-            .setInterpolator(DecelerateInterpolator())
-            .withEndAction {
-                setIconSize(targetSize)
-                iconView.scaleX = 1f
-                iconView.scaleY = 1f
-            }
-            .start()
+        iconView.doOnLayout {
+            iconView.pivotX = iconView.width / 2f
+            iconView.pivotY = iconView.height / 2f
+            iconView.animate()
+                .scaleX(0.5f)
+                .scaleY(0.5f)
+                .setDuration(420)
+                .setInterpolator(DecelerateInterpolator())
+                .withEndAction {
+                    setIconSize(targetSize)
+                    iconView.scaleX = 1f
+                    iconView.scaleY = 1f
+                }
+                .start()
+        }
     }
 
     private fun setIconSize(size: Int) {
