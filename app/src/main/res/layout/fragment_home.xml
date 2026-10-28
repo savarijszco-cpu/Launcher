@@ -8,14 +8,12 @@
     android:orientation="vertical"
     tools:context=".ui.HomeFragment">
 
-    <!-- Placeholder layout for locking screen -->
     <FrameLayout
         android:id="@+id/lock"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:contentDescription="@string/lock_layout_description" />
 
-    <!-- Clock and calendar -->
     <LinearLayout
         android:id="@+id/dateTimeLayout"
         android:layout_width="match_parent"
@@ -48,7 +46,6 @@
             tools:text="Thu, 30 Dec" />
     </LinearLayout>
 
-    <!-- Screen time -->
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/tvScreenTime"
         style="@style/TextSmall"
@@ -64,7 +61,6 @@
         tools:text="2h 11m"
         tools:visibility="visible" />
 
-    <!-- Home apps -->
     <LinearLayout
         android:id="@+id/homeAppsLayout"
         android:layout_width="match_parent"
@@ -162,7 +158,6 @@
         android:visibility="gone"
         tools:visibility="visible" />
 
-    <!-- Set default launcher -->
     <TextView
         android:id="@+id/setDefaultLauncher"
         style="@style/TextMedium"
