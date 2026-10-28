@@ -175,9 +175,11 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
         val component = ComponentName(requireContext(), NotificationDotListenerService::class.java)
         val enabledListeners = Settings.Secure.getString(
             requireContext().contentResolver,
-            Settings.Secure.ENABLED_NOTIFICATION_LISTENERS
+            "enabled_notification_listeners"
         ).orEmpty()
-        return enabledListeners.split(':').any { ComponentName.unflattenFromString(it) == component }
+        return enabledListeners.split(':').any {
+            ComponentName.unflattenFromString(it) == component
+        }
     }
 
     private fun initClickListeners() {
