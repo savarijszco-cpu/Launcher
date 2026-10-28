@@ -46,6 +46,7 @@ import app.olauncher.helper.showPopupMenu
 import app.olauncher.helper.showStatusBar
 import app.olauncher.helper.showToast
 import app.olauncher.listener.DeviceAdmin
+import app.olauncher.listener.NotificationDotListenerService
 
 class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListener {
 
@@ -111,6 +112,7 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
             // R.id.homeButtonRecents -> toggleHomeButtonRecents()
             R.id.autoShowKeyboard -> toggleKeyboardText()
             R.id.homeAppsNum -> showHomeAppsNumMenu(view)
+            R.id.notificationDots -> startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
             R.id.dailyWallpaperUrl -> requireContext().openUrl(prefs.dailyWallpaperUrl)
             R.id.dailyWallpaper -> toggleDailyWallpaperUpdate()
             R.id.alignment -> showAlignmentMenu(view)
@@ -162,6 +164,22 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
         return true
     }
 
+    override fun onResume() {
+        super.onResume()
+        binding.notificationDotsStatus.setText(
+            if (hasNotificationListenerAccess()) R.string.on else R.string.off
+        )
+    }
+
+    private fun hasNotificationListenerAccess(): Boolean {
+        val component = ComponentName(requireContext(), NotificationDotListenerService::class.java)
+        val enabledListeners = Settings.Secure.getString(
+            requireContext().contentResolver,
+            Settings.Secure.ENABLED_NOTIFICATION_LISTENERS
+        ).orEmpty()
+        return enabledListeners.split(':').any { ComponentName.unflattenFromString(it) == component }
+    }
+
     private fun initClickListeners() {
         binding.olauncherHiddenApps.setOnClickListener(this)
         binding.appInfo.setOnClickListener(this)
@@ -173,6 +191,7 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
         // Home button for recents feature disabled
         // binding.homeButtonRecents.setOnClickListener(this)
         binding.homeAppsNum.setOnClickListener(this)
+        binding.notificationDots.setOnClickListener(this)
         binding.screenTimeOnOff.setOnClickListener(this)
         binding.dailyWallpaperUrl.setOnClickListener(this)
         binding.dailyWallpaper.setOnClickListener(this)

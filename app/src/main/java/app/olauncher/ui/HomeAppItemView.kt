@@ -9,6 +9,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.view.doOnLayout
+import app.olauncher.data.NotificationDotStore
 import app.olauncher.R
 import kotlin.math.roundToInt
 
@@ -20,6 +21,8 @@ class HomeAppItemView @JvmOverloads constructor(
 
     private val iconView: ImageView
     private val labelView: TextView
+    private val notificationDotView: View
+    private var boundPackageName: String? = null
 
     init {
         orientation = HORIZONTAL
@@ -28,12 +31,14 @@ class HomeAppItemView @JvmOverloads constructor(
 
         iconView = findViewById(R.id.homeAppIcon)
         labelView = findViewById(R.id.homeAppLabel)
+        notificationDotView = findViewById(R.id.homeAppNotificationDot)
 
         isFocusable = true
         setPadding(0, 4.dpToPx(), 0, 4.dpToPx())
     }
 
     fun bind(appName: String, packageName: String) {
+        boundPackageName = packageName
         labelView.text = appName
 
         try {
@@ -44,13 +49,23 @@ class HomeAppItemView @JvmOverloads constructor(
             iconView.setImageDrawable(null)
         }
 
+        refreshNotificationDot()
         animateIconToFinalSize()
     }
 
     fun showPlaceholder(label: String) {
+        boundPackageName = null
         labelView.text = label
         iconView.setImageDrawable(null)
+        notificationDotView.visibility = View.GONE
         visibility = View.VISIBLE
+    }
+
+    fun refreshNotificationDot() {
+        val hasNotification = boundPackageName?.let {
+            NotificationDotStore.hasActiveNotification(context, it)
+        } == true
+        notificationDotView.visibility = if (hasNotification) View.VISIBLE else View.GONE
     }
 
     fun setItemVisible(visible: Boolean) {
@@ -58,13 +73,9 @@ class HomeAppItemView @JvmOverloads constructor(
     }
 
     private fun animateIconToFinalSize() {
-        val startSize = 32.dpToPx()
-        val targetSize = 16.dpToPx()
-
         iconView.animate().cancel()
         iconView.scaleX = 1f
         iconView.scaleY = 1f
-        setIconSize(startSize)
 
         iconView.doOnLayout {
             iconView.pivotX = iconView.width / 2f
@@ -74,20 +85,8 @@ class HomeAppItemView @JvmOverloads constructor(
                 .scaleY(0.5f)
                 .setDuration(420)
                 .setInterpolator(DecelerateInterpolator())
-                .withEndAction {
-                    setIconSize(targetSize)
-                    iconView.scaleX = 1f
-                    iconView.scaleY = 1f
-                }
                 .start()
         }
-    }
-
-    private fun setIconSize(size: Int) {
-        val lp = iconView.layoutParams
-        lp.width = size
-        lp.height = size
-        iconView.layoutParams = lp
     }
 
     private fun Int.dpToPx(): Int {

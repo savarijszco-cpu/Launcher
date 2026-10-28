@@ -2,6 +2,7 @@ package app.olauncher.ui
 import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
 import android.content.pm.LauncherApps
 import android.content.res.Configuration
 import android.os.BatteryManager
@@ -26,6 +27,7 @@ import app.olauncher.MainViewModel
 import app.olauncher.R
 import app.olauncher.data.AppModel
 import app.olauncher.data.Constants
+import app.olauncher.data.NotificationDotStore
 import app.olauncher.data.Prefs
 import app.olauncher.databinding.FragmentHomeBinding
 import app.olauncher.helper.appUsagePermissionGranted
@@ -54,6 +56,11 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
+    private var notificationPreferences: SharedPreferences? = null
+    private val notificationPreferencesListener =
+        SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
+            if (key == NotificationDotStore.ACTIVE_PACKAGES_KEY) refreshHomeNotificationDots()
+        }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         _binding = FragmentHomeBinding.inflate(inflater, container, false)
@@ -81,6 +88,23 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         viewModel.isOlauncherDefault()
         if (prefs.showStatusBar) showStatusBar()
         else hideStatusBar()
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val preferences = requireContext().getSharedPreferences(
+            NotificationDotStore.PREFERENCES_NAME,
+            Context.MODE_PRIVATE
+        )
+        notificationPreferences = preferences
+        preferences.registerOnSharedPreferenceChangeListener(notificationPreferencesListener)
+        refreshHomeNotificationDots()
+    }
+
+    override fun onStop() {
+        notificationPreferences?.unregisterOnSharedPreferenceChangeListener(notificationPreferencesListener)
+        notificationPreferences = null
+        super.onStop()
     }
 
     override fun onClick(view: View) {
@@ -427,6 +451,20 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         binding.homeApp6.visibility = View.GONE
         binding.homeApp7.visibility = View.GONE
         binding.homeApp8.visibility = View.GONE
+    }
+
+    private fun refreshHomeNotificationDots() {
+        val currentBinding = _binding ?: return
+        listOf(
+            currentBinding.homeApp1,
+            currentBinding.homeApp2,
+            currentBinding.homeApp3,
+            currentBinding.homeApp4,
+            currentBinding.homeApp5,
+            currentBinding.homeApp6,
+            currentBinding.homeApp7,
+            currentBinding.homeApp8
+        ).forEach { it.refreshNotificationDot() }
     }
 
     private fun launchAppOrShortcut(
