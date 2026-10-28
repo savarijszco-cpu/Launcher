@@ -1,5 +1,4 @@
 package app.olauncher.ui
-
 import android.app.admin.DevicePolicyManager
 import android.content.Context
 import android.content.Intent
@@ -180,6 +179,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         viewModel.refreshHome.observe(viewLifecycleOwner) {
             populateHomeScreen(it)
         }
+
         viewModel.isOlauncherDefault.observe(viewLifecycleOwner, Observer {
             if (it != true) {
                 if (prefs.dailyWallpaper && prefs.appTheme == AppCompatDelegate.MODE_NIGHT_YES) {
@@ -192,12 +192,15 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             if (binding.firstRunTips.isVisible) return@Observer
             binding.setDefaultLauncher.isVisible = it.not() && prefs.hideSetDefaultLauncher.not()
         })
+
         viewModel.homeAppAlignment.observe(viewLifecycleOwner) {
             setHomeAlignment(it)
         }
+
         viewModel.toggleDateTime.observe(viewLifecycleOwner) {
             populateDateTime()
         }
+
         viewModel.screenTimeValue.observe(viewLifecycleOwner) {
             it?.let { binding.tvScreenTime.text = it }
         }
@@ -290,6 +293,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         } else {
             if (prefs.dateTimeVisibility == Constants.DateTime.DATE_ONLY) 45.dpToPx() else 72.dpToPx()
         }
+
         val params = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.WRAP_CONTENT,
             FrameLayout.LayoutParams.WRAP_CONTENT
@@ -299,6 +303,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             marginEnd = horizontalMargin
             gravity = if (prefs.homeAlignment == Gravity.END) Gravity.START else Gravity.END
         }
+
         binding.tvScreenTime.layoutParams = params
         binding.tvScreenTime.setPadding(10.dpToPx())
     }
@@ -437,6 +442,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             showLongPressToast()
             return
         }
+
         if (isShortcut && !shortcutId.isNullOrEmpty()) {
             launchShortcut(
                 packageName = packageName,
@@ -599,6 +605,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             )
             return
         }
+
         val intent = Intent()
         try {
             intent.setClassName(
