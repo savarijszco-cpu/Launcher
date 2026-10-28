@@ -391,25 +391,25 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                 val shortcuts = launcherApps.getShortcuts(query, userHandle)
                 if (shortcuts?.any { it.id == shortcutId } == true) {
                     itemView.bind(appName, packageName)
-                    itemView.visibility = View.VISIBLE
+                    itemView.setItemVisible(true)
                     return true
                 }
-                itemView.visibility = View.GONE
+                itemView.setItemVisible(false)
                 return false
             } catch (e: Exception) {
                 e.printStackTrace()
-                itemView.visibility = View.GONE
+                itemView.setItemVisible(false)
                 return false
             }
         }
 
         if (isPackageInstalled(requireContext(), packageName, userString)) {
             itemView.bind(appName, packageName)
-            itemView.visibility = View.VISIBLE
+            itemView.setItemVisible(true)
             return true
         }
 
-        itemView.visibility = View.GONE
+        itemView.setItemVisible(false)
         return false
     }
 
