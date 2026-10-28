@@ -1,7 +1,6 @@
 package app.olauncher.ui
 
 import android.content.Context
-import android.graphics.drawable.Drawable
 import android.util.AttributeSet
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -10,7 +9,6 @@ import android.view.animation.DecelerateInterpolator
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.view.setPadding
 import app.olauncher.R
 import kotlin.math.roundToInt
 
@@ -42,20 +40,26 @@ class HomeAppItemView @JvmOverloads constructor(
             val pm = context.packageManager
             val icon = pm.getApplicationIcon(packageName)
             iconView.setImageDrawable(icon)
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             iconView.setImageDrawable(null)
         }
 
-        val initialSize = labelView.textSize.roundToInt().coerceAtLeast(16)
-        setIconSize(initialSize)
+        val baseSize = labelView.textSize.roundToInt().coerceAtLeast(16)
+        setIconSize(baseSize)
 
         post {
-            animateFoldToHalf()
+            animateToHalfSize()
         }
     }
 
-    private fun animateFoldToHalf() {
-        val currentSize = iconView.layoutParams.width
+    fun setItemVisible(visible: Boolean) {
+        this.visibility = if (visible) View.VISIBLE else View.GONE
+    }
+
+    private fun animateToHalfSize() {
+        val currentSize = iconView.width
+        if (currentSize <= 0) return
+
         val targetSize = (currentSize * 0.5f).roundToInt().coerceAtLeast(12)
 
         iconView.pivotX = currentSize.toFloat()
