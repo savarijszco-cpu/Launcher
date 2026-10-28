@@ -5,6 +5,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
 import android.content.res.Configuration
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.drawable.BitmapDrawable
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
@@ -47,6 +50,7 @@ import app.olauncher.listener.ViewSwipeTouchListener
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlin.math.roundToInt
 
 class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListener {
 
@@ -96,7 +100,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             R.id.tvScreenTime -> openScreenTimeDigitalWellbeing()
 
             else -> {
-                try { // Launch app
+                try {
                     val appLocation = view.tag.toString().toInt()
                     homeAppClicked(appLocation)
                 } catch (e: Exception) {
@@ -203,10 +207,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         viewModel.screenTimeValue.observe(viewLifecycleOwner) {
             it?.let { binding.tvScreenTime.text = it }
         }
-        // Home button for recents feature disabled
-        // viewModel.showRecentApps.observe(viewLifecycleOwner) {
-        //     binding.recents.performClick()
-        // }
     }
 
     private fun initSwipeTouchListener() {
@@ -224,8 +224,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
     private fun initClickListeners() {
         binding.lock.setOnClickListener(this)
-        // Home button for recents feature disabled
-        // binding.recents.setOnClickListener(this)
         binding.clock.setOnClickListener(this)
         binding.date.setOnClickListener(this)
         binding.clock.setOnLongClickListener(this)
@@ -235,7 +233,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         binding.tvScreenTime.setOnClickListener(this)
         binding.tvScreenTime.setOnLongClickListener(this)
 
-        // These fire only on d-pad/keyboard events; touch is consumed by ViewSwipeTouchListener
         binding.homeApp1.setOnClickListener(this)
         binding.homeApp2.setOnClickListener(this)
         binding.homeApp3.setOnClickListener(this)
@@ -273,7 +270,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         binding.clock.isVisible = Constants.DateTime.isTimeVisible(prefs.dateTimeVisibility)
         binding.date.isVisible = Constants.DateTime.isDateVisible(prefs.dateTimeVisibility)
 
-//        var dateText = SimpleDateFormat("EEE, d MMM", Locale.getDefault()).format(Date())
         val dateFormat = SimpleDateFormat("EEE, d MMM", Locale.getDefault())
         var dateText = dateFormat.format(Date())
 
@@ -387,14 +383,10 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         isShortcut: Boolean,
         shortcutId: String?,
     ): Boolean {
-        // Get user handle for the app/shortcut
         val userHandle = getUserHandleFromString(requireContext(), userString)
 
-        // If it's a shortcut, verify it still exists
         if (isShortcut) {
             val launcherApps = requireContext().getSystemService(Context.LAUNCHER_APPS_SERVICE) as LauncherApps
-
-            // Query for the specific shortcut
             val query = LauncherApps.ShortcutQuery().apply {
                 setPackage(packageName)
                 setQueryFlags(LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED)
@@ -402,27 +394,54 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
             try {
                 val shortcuts = launcherApps.getShortcuts(query, userHandle)
-                // Check if our shortcut still exists
                 if (shortcuts?.any { it.id == shortcutId } == true) {
                     textView.text = appName
+                    applyHomeAppIcon(textView, packageName)
                     return true
                 }
                 textView.text = ""
+                textView.setCompoundDrawables(null, null, null, null)
                 return false
             } catch (e: Exception) {
                 e.printStackTrace()
                 textView.text = ""
+                textView.setCompoundDrawables(null, null, null, null)
                 return false
             }
         }
 
-        // Regular app check
         if (isPackageInstalled(requireContext(), packageName, userString)) {
             textView.text = appName
+            applyHomeAppIcon(textView, packageName)
             return true
         }
         textView.text = ""
+        textView.setCompoundDrawables(null, null, null, null)
         return false
+    }
+
+    private fun applyHomeAppIcon(textView: TextView, packageName: String) {
+        try {
+            val pm = textView.context.packageManager
+            val appIcon = pm.getApplicationIcon(packageName)
+            val iconSize = (textView.textSize * 0.5f).roundToInt().coerceAtLeast(14)
+
+            val bitmap = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888)
+            val canvas = Canvas(bitmap)
+            appIcon.setBounds(0, 0, iconSize, iconSize)
+            appIcon.draw(canvas)
+
+            val drawable = BitmapDrawable(textView.resources, bitmap).apply {
+                setBounds(0, 0, iconSize, iconSize)
+            }
+
+            textView.setCompoundDrawables(drawable, null, null, null)
+            textView.compoundDrawablePadding = 8.dpToPx()
+            textView.gravity = Gravity.START or Gravity.CENTER_VERTICAL
+            textView.includeFontPadding = false
+        } catch (e: Exception) {
+            textView.setCompoundDrawables(null, null, null, null)
+        }
     }
 
     private fun hideHomeApps() {
@@ -635,7 +654,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     private fun showLongPressToast() = requireContext().showToast(getString(R.string.long_press_to_select_app))
 
     private fun textOnClick(view: View) = onClick(view)
-
     private fun textOnLongClick(view: View) = onLongClick(view)
 
     private fun getSwipeGestureListener(context: Context): View.OnTouchListener {
