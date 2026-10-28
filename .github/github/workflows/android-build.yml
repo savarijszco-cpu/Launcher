@@ -31,3 +31,4 @@ jobs:
         with:
           name: launcher-debug-apk
           path: app/build/outputs/apk/debug/*.apk
+
