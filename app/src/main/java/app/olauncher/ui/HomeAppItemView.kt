@@ -51,6 +51,12 @@ class HomeAppItemView @JvmOverloads constructor(
         }
     }
 
+    fun showPlaceholder(label: String) {
+        labelView.text = label
+        iconView.setImageDrawable(null)
+        visibility = View.VISIBLE
+    }
+
     fun setItemVisible(visible: Boolean) {
         this.visibility = if (visible) View.VISIBLE else View.GONE
     }

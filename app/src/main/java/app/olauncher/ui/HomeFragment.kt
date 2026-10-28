@@ -399,11 +399,11 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                     itemView.setItemVisible(true)
                     return true
                 }
-                itemView.setItemVisible(false)
+                itemView.showPlaceholder(getString(R.string.app))
                 return false
             } catch (e: Exception) {
                 e.printStackTrace()
-                itemView.setItemVisible(false)
+                itemView.showPlaceholder(getString(R.string.app))
                 return false
             }
         }
@@ -414,7 +414,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             return true
         }
 
-        itemView.setItemVisible(false)
+        itemView.showPlaceholder(getString(R.string.app))
         return false
     }
 
