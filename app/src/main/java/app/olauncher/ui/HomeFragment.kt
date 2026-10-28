@@ -5,9 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.LauncherApps
 import android.content.res.Configuration
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.drawable.BitmapDrawable
 import android.os.BatteryManager
 import android.os.Build
 import android.os.Bundle
@@ -17,7 +14,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.WindowInsets
 import android.widget.FrameLayout
-import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatDelegate
@@ -50,7 +46,6 @@ import app.olauncher.listener.ViewSwipeTouchListener
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import kotlin.math.roundToInt
 
 class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListener {
 
@@ -92,8 +87,6 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     override fun onClick(view: View) {
         when (view.id) {
             R.id.lock -> {}
-            // Home button for recents feature disabled
-            // R.id.recents -> {}
             R.id.clock -> openClockApp()
             R.id.date -> openCalendarApp()
             R.id.setDefaultLauncher -> viewModel.resetLauncherLiveData.call()
@@ -144,6 +137,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             R.id.homeApp6 -> showAppList(Constants.FLAG_SET_HOME_APP_6, prefs.appName6.isNotEmpty(), true)
             R.id.homeApp7 -> showAppList(Constants.FLAG_SET_HOME_APP_7, prefs.appName7.isNotEmpty(), true)
             R.id.homeApp8 -> showAppList(Constants.FLAG_SET_HOME_APP_8, prefs.appName8.isNotEmpty(), true)
+
             R.id.clock -> {
                 showAppList(Constants.FLAG_SET_CLOCK_APP)
                 prefs.clockAppPackage = ""
@@ -311,6 +305,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
 
     private fun populateHomeScreen(appCountUpdated: Boolean) {
         if (appCountUpdated) hideHomeApps()
+
         populateDateTime()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
@@ -376,7 +371,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     }
 
     private fun setHomeAppText(
-        textView: TextView,
+        itemView: HomeAppItemView,
         appName: String,
         packageName: String,
         userString: String,
@@ -395,53 +390,27 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
             try {
                 val shortcuts = launcherApps.getShortcuts(query, userHandle)
                 if (shortcuts?.any { it.id == shortcutId } == true) {
-                    textView.text = appName
-                    applyHomeAppIcon(textView, packageName)
+                    itemView.bind(appName, packageName)
+                    itemView.visibility = View.VISIBLE
                     return true
                 }
-                textView.text = ""
-                textView.setCompoundDrawables(null, null, null, null)
+                itemView.visibility = View.GONE
                 return false
             } catch (e: Exception) {
                 e.printStackTrace()
-                textView.text = ""
-                textView.setCompoundDrawables(null, null, null, null)
+                itemView.visibility = View.GONE
                 return false
             }
         }
 
         if (isPackageInstalled(requireContext(), packageName, userString)) {
-            textView.text = appName
-            applyHomeAppIcon(textView, packageName)
+            itemView.bind(appName, packageName)
+            itemView.visibility = View.VISIBLE
             return true
         }
-        textView.text = ""
-        textView.setCompoundDrawables(null, null, null, null)
+
+        itemView.visibility = View.GONE
         return false
-    }
-
-    private fun applyHomeAppIcon(textView: TextView, packageName: String) {
-        try {
-            val pm = textView.context.packageManager
-            val appIcon = pm.getApplicationIcon(packageName)
-            val iconSize = (textView.textSize * 0.5f).roundToInt().coerceAtLeast(14)
-
-            val bitmap = Bitmap.createBitmap(iconSize, iconSize, Bitmap.Config.ARGB_8888)
-            val canvas = Canvas(bitmap)
-            appIcon.setBounds(0, 0, iconSize, iconSize)
-            appIcon.draw(canvas)
-
-            val drawable = BitmapDrawable(textView.resources, bitmap).apply {
-                setBounds(0, 0, iconSize, iconSize)
-            }
-
-            textView.setCompoundDrawables(drawable, null, null, null)
-            textView.compoundDrawablePadding = 8.dpToPx()
-            textView.gravity = Gravity.START or Gravity.CENTER_VERTICAL
-            textView.includeFontPadding = false
-        } catch (e: Exception) {
-            textView.setCompoundDrawables(null, null, null, null)
-        }
     }
 
     private fun hideHomeApps() {
@@ -495,7 +464,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
                 user = getUserHandleFromString(requireContext(), userString),
                 key = null,
                 appPackage = packageName,
-                isNew = false,
+                isNew = false
             ),
             Constants.FLAG_LAUNCH_APP
         )
